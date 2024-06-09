@@ -11,6 +11,12 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
+import os, sys
+from django.utils.translation import gettext_lazy as _
+from os.path import abspath, dirname, join
+
+
+AUTH_USER_MODEL = "user.User"
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -37,6 +43,16 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
+    'rest_framework',
+    'rest_framework.authtoken',
+    'user',
+    'i18n_switcher',
+    'home',
+    'utils',
+    'after_response',
+    'colorfield',
+    'gdstorage',
 ]
 
 MIDDLEWARE = [
@@ -51,10 +67,22 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'hquality_backend.urls'
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+    ),
+    # 'DEFAULT_PERMISSION_CLASSES': (
+    #     'rest_framework.permissions.IsAuthenticated',
+    # )
+}
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [
+            os.path.join(BASE_DIR, 'templates'),
+            os.path.join(BASE_DIR, 'user/templates'),
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -62,6 +90,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.i18n',
             ],
         },
     },
@@ -73,10 +102,19 @@ WSGI_APPLICATION = 'hquality_backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'OPTIONS': {
+            'read_default_file': os.path.join(BASE_DIR, 'my.cnf'),
+        },
     }
 }
 
@@ -103,9 +141,15 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'fr'
 
-TIME_ZONE = 'UTC'
+LANGUAGES = [
+    ('ar', _('Arabic')),
+    ('en', _('English')),
+    ('fr', _('French'))
+]
+
+TIME_ZONE = 'Africa/Casablanca'
 
 USE_I18N = True
 
@@ -115,9 +159,73 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
+
+# Logging
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'main_formatter': {
+            'format': '[{asctime} - {levelname} - {module} - {filename} - {lineno}]: {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': 'log/main_log.log',
+            'formatter': 'main_formatter',
+            'level': 'WARNING',
+            'backupCount': 10,  # keep at most 10 log files
+            'maxBytes': 5242880,  # 5*1024*1024 bytes (5MB)
+        },
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'main_formatter',
+            'level': 'WARNING',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file', 'console'],
+            'level': 'WARNING',
+            'propagate': True,
+        },
+    },
+}
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+SITE_NAME = "HQuality"
+CONTACT_EMAIL = "contact@example.com"
+EMAIL_CONFIRMATION_KEY_EXPIRATION_MINUTES = 60
+EMAIL_HOST = 'smtp.sendgrid.net'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_SMTP_PROVIDER = "sendgrid"
+# See if the developer has any local settings.
+
+
+CORS_ORIGIN_ALLOW_ALL = False
+CORS_ORIGIN_WHITELIST = []
+DEVELOPMENT_MODE = "prod"
+
+# google storage config
+GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE = '/etc/...'  # path to private json key file obtained by Google.
+GOOGLE_DRIVE_STORAGE_SERVICE_EMAIL = "'googleaccount'@gmail.com"
+
+if os.path.isfile(join(dirname(abspath(__file__)), 'private.py')):
+    from .private import *  # pylint: disable=import-error,wildcard-import
+if DEVELOPMENT_MODE == "dev" and os.path.isfile(join(dirname(abspath(__file__)), 'devstack.py')):
+    from .devstack import *  # pylint: disable=import-error,wildcard-import
+
+TEST_SETTINGS = False
