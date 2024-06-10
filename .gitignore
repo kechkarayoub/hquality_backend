@@ -174,3 +174,7 @@ pip-wheel-metadata/
 
 **/private.py
 
+
+# not to ignore:
+!hquality_backend/dev_keys/hqualitydev_drive_storage.json
+
