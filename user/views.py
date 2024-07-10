@@ -47,10 +47,11 @@ class LoginTokenView(APIView):
                 'message': _('Invalid credentials!'),
             })
         token, created = Token.objects.get_or_create(user=user)
+        user_dict = user.to_dict()
+        user_dict["token"] = token.key
         response = JsonResponse({
             'success': True,
-            'access_token': token.key,
-            'user': user.to_dict(),
+            'user': user_dict,
         })
         response.set_cookie(key="jwt", value=token.key, httponly=True)
         return response
