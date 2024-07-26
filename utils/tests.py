@@ -36,7 +36,7 @@ class UtilsTest(TestCase):
             self.assertEqual(response_failed, "no_smtp_email_provider")
 
     def test_get_static_logo_url(self):
-        self.assertEqual(settings.BACKEND_URL + "/static/images/logo.jpg", get_static_logo_url())
+        self.assertEqual(os.getenv('BACKEND_URL') + "/static/images/logo.jpg", get_static_logo_url())
 
     def test_get_img_as_base64(self):
         base64_to_compare = base64.b64encode(requests.get(get_static_logo_url()).content).decode('ascii')

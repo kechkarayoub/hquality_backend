@@ -26,7 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-)q6g!-9m)pu=z$vg$fcbp0z&9s@62-55#b^jlehd5i@6_qq49t'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -52,7 +52,6 @@ INSTALLED_APPS = [
     'utils',
     'after_response',
     'colorfield',
-    'gdstorage',
 ]
 
 MIDDLEWARE = [
@@ -113,9 +112,10 @@ WSGI_APPLICATION = 'hquality_backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'OPTIONS': {
-            'read_default_file': os.path.join(BASE_DIR, 'my.cnf'),
-        },
+        'NAME': os.getenv('DATABASE_NAME'),
+        'HOST': os.getenv('DATABASE_HOST'),
+        'USER': os.getenv('DATABASE_USER'),
+        'PASSWORD': os.getenv('DATABASE_PASSWORD'),
     }
 }
 
@@ -209,24 +209,22 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 SITE_NAME = "HQuality"
 CONTACT_EMAIL = "contact@example.com"
 EMAIL_CONFIRMATION_KEY_EXPIRATION_MINUTES = 60
-EMAIL_HOST = 'smtp.sendgrid.net'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_SMTP_PROVIDER = "sendgrid"
+EMAIL_SMTP_PROVIDER = "brevo"
 # See if the developer has any local settings.
 
 
 CORS_ORIGIN_ALLOW_ALL = False
 CORS_ORIGIN_WHITELIST = []
-DEVELOPMENT_MODE = "prod"
 
-# google storage config
-GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE = '/etc/...'  # path to private json key file obtained by Google.
-GOOGLE_DRIVE_STORAGE_SERVICE_EMAIL = "'googleaccount'@gmail.com"
+LANGUAGES_DICT = {
+    "ar": _("Arabic"),
+    "en": _("English"),
+    "fr": _("French")
+}
 
 if os.path.isfile(join(dirname(abspath(__file__)), 'private.py')):
     from .private import *  # pylint: disable=import-error,wildcard-import
-if DEVELOPMENT_MODE == "dev" and os.path.isfile(join(dirname(abspath(__file__)), 'devstack.py')):
+if os.getenv('DEVELOPMENT_MODE') == "dev" and os.path.isfile(join(dirname(abspath(__file__)), 'devstack.py')):
     from .devstack import *  # pylint: disable=import-error,wildcard-import
 
 TEST_SETTINGS = False

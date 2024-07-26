@@ -177,6 +177,13 @@ class User(AbstractUser):
         return self.username
 
     @property
+    def full_name(self):
+        """
+            :return: return the full name of the user
+        """
+        return self.last_name + " " + self.first_name
+
+    @property
     def language_name(self):
         """
             :return: return the name of the current language

@@ -169,7 +169,9 @@ my.cnf
 pip-wheel-metadata/
 *.sh
 
-
+*.pyc
+/media/
+/staticfiles/
 
 
 **/private.py

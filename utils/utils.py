@@ -2,12 +2,23 @@
 
 from django.conf import settings
 from django.core.mail import send_mail
+from pprint import pprint
+from sib_api_v3_sdk.rest import ApiException
 from django.utils.translation import gettext_lazy as _
 import after_response
-import base64
+import base64, os
 import datetime
 import random
 import requests
+import sib_api_v3_sdk
+
+# Configure API key authorization: api-key
+configuration = sib_api_v3_sdk.Configuration()
+configuration.api_key['api-key'] = os.getenv('BREVO_API_KEY')
+
+# Create an instance of the API class
+api_instance = sib_api_v3_sdk.TransactionalEmailsApi(sib_api_v3_sdk.ApiClient(configuration))
+
 
 
 BG_COLORS_CHOICES = ["#f36422", "#ffee02", "#f070a9", "#00adef", "#7cc142", "#d02b49"]
@@ -29,7 +40,7 @@ def date_from_string(date_string):
 
 
 @after_response.enable
-def send_email(subject, message_txt, list_emails, html_message=None):
+def send_email(subject, message_txt, list_emails, html_message=None, names_by_emails={}):
     """
         :param subject: subject of the email
         :param message_txt: plain text of the email
@@ -37,8 +48,10 @@ def send_email(subject, message_txt, list_emails, html_message=None):
         :param html_message: html_message of the email
         :return: None
     """
-    if settings.EMAIL_SMTP_PROVIDER == "sendgrid":
-        return send_mail(subject, message_txt, settings.EMAIL_FROM_ADDRESS, list_emails, html_message=html_message)
+    if settings.EMAIL_SMTP_PROVIDER == "brevo":
+        to_emails = [{"email": email, "name": names_by_emails.get(email) or ""} for email in list_emails]
+        sender = {"name": settings.SITE_NAME, "email": os.getenv('EMAIL_FROM_ADDRESS')}
+        return send_brevo_mail(subject, message_txt, sender, to_emails, html_message=html_message)
     else:
         return "no_smtp_email_provider"
 
@@ -47,7 +60,7 @@ def get_static_logo_url():
     """
         :return: the url of the website logo
     """
-    return settings.BACKEND_URL + "/static/images/logo.jpg"
+    return os.getenv('BACKEND_URL') + "/static/images/logo.jpg"
 
 
 def get_img_as_base64(url):
@@ -132,3 +145,23 @@ def get_gender_choices_dict():
     for gender_choice in gender_choices:
         gender_choices_dict[gender_choice[0]] = gender_choice[1]
     return gender_choices_dict
+
+
+def send_brevo_mail(subject, message_txt, sender, to_emails, html_message=None, template_id=None):
+    send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(
+        to=to_emails,
+        sender=sender,
+        subject=subject,
+        html_content=html_message,  # Use this if not using a template
+        template_id=template_id,  # Use this if using a template
+    )
+
+    try:
+        # Send the email
+        api_response = api_instance.send_transac_email(send_smtp_email)
+        pprint(api_response)
+        return api_response
+    except ApiException as e:
+        print("Exception when calling TransactionalEmailsApi->send_transac_email: %s\n" % e)
+
+

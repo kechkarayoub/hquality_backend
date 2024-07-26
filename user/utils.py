@@ -6,7 +6,7 @@ from django.template.loader import render_to_string
 from django.utils.translation import activate, gettext_lazy as _
 from utils.utils import send_email, get_img_as_base64, get_static_logo_url
 import after_response
-import logging
+import logging, os
 
 logger = logging.getLogger("django")
 
@@ -25,9 +25,9 @@ def send_new_user_confirmation_email(user, user_email_confirmation_key):
         "full_name": user.last_name + " " + user.first_name,
         "logo_url": get_static_logo_url(),
         "site_name": settings.SITE_NAME,
-        "site_url": settings.FRONT_URL,
+        "site_url": os.getenv('FRONT_URL'),
         "subject": email_subject,
-        "validation_url": settings.FRONT_URL + "/validation_email/" + user_email_confirmation_key,
+        "validation_url": os.getenv('FRONT_URL') + "/validation_email/" + user_email_confirmation_key,
     }
     email_message_txt = render_to_string('emails/confirmation_email.txt', context)
     email_message_html = render_to_string('emails/confirmation_email.html', context)
@@ -41,7 +41,12 @@ def send_new_user_confirmation_email(user, user_email_confirmation_key):
                 images[i].src=images[i].src.replace(/^https:\/\/[a-zA-Z0-9.\/\-=_]+#/,'');
             }
     """
-    response = send_email(email_subject, email_message_txt, [user.email], html_message=email_message_html)
+    names_by_emails = {
+        user.email: user.full_name
+    }
+    response = send_email(email_subject, email_message_txt, [user.email], names_by_emails=names_by_emails, html_message=email_message_html)
+    if response is None:
+        logger.error("Something went wrong, the email doesn't sent")
     if response == "no_smtp_email_provider":
         logger.warning('You should configure a smtp email provider')
 
