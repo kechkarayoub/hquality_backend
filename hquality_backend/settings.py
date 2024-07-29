@@ -15,6 +15,8 @@ import os, sys
 from django.utils.translation import gettext_lazy as _
 from os.path import abspath, dirname, join
 
+from log.log_config import LOG_DIR
+
 
 AUTH_USER_MODEL = "user.User"
 
@@ -178,7 +180,7 @@ LOGGING = {
     'handlers': {
         'file': {
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': 'log/main_log.log',
+            'filename': os.path.join(LOG_DIR, 'main_log.log'),
             'formatter': 'main_formatter',
             'level': 'WARNING',
             'backupCount': 10,  # keep at most 10 log files
@@ -187,13 +189,13 @@ LOGGING = {
         'console': {
             'class': 'logging.StreamHandler',
             'formatter': 'main_formatter',
-            'level': 'WARNING',
+            'level': 'INFO',
         },
     },
     'loggers': {
         'django': {
             'handlers': ['file', 'console'],
-            'level': 'WARNING',
+            'level': 'INFO',
             'propagate': True,
         },
     },
