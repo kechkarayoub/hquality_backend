@@ -57,6 +57,7 @@ cover/
 
 # Django stuff:
 *.log
+log/logs/*
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
@@ -169,8 +170,14 @@ my.cnf
 pip-wheel-metadata/
 *.sh
 
-
+*.pyc
+/media/
+/staticfiles/
 
 
 **/private.py
+
+
+# not to ignore:
+!hquality_backend/dev_keys/hqualitydev_drive_storage.json
 
